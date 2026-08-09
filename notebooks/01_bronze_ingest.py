@@ -27,36 +27,28 @@ spark.sql(f"USE {database}")
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Download raw files to local disk, then stage on DBFS
-# MAGIC Databricks Spark can't read directly from an `https://` URL, so we pull the
-# MAGIC files to local disk first and copy them into DBFS. On serverless compute,
-# MAGIC local filesystem access is restricted to `/Workspace` paths (`/tmp` is not
-# MAGIC writable), so we stage under the current user's workspace directory.
+# MAGIC ## Download raw files into memory, convert to Spark DataFrames
+# MAGIC Databricks Spark can't read directly from an `https://` URL. On serverless
+# MAGIC compute the Python execution environment and the Spark/`dbutils.fs` runtime
+# MAGIC don't share a local disk, so writing to `/tmp` or `/Workspace` and then
+# MAGIC copying via `dbutils.fs.cp` fails with a `FileNotFoundException`. Instead we
+# MAGIC pull the bytes straight into memory with `urllib`, load them with pandas,
+# MAGIC and hand the result to Spark via `createDataFrame` — no disk involved.
 
 # COMMAND ----------
 
+import io
 import urllib.request
-import os
 
-current_user = spark.sql("SELECT current_user()").collect()[0][0]
-local_dir = f"/Workspace/Users/{current_user}/nyc_taxi_raw"
-os.makedirs(local_dir, exist_ok=True)
+import pandas as pd
 
-local_trip_path = f"{local_dir}/yellow_tripdata_{year_month}.parquet"
-local_zone_path = f"{local_dir}/taxi_zone_lookup.csv"
+trip_bytes = urllib.request.urlopen(trip_url).read()
+zone_bytes = urllib.request.urlopen(zone_lookup_url).read()
 
-urllib.request.urlretrieve(trip_url, local_trip_path)
-urllib.request.urlretrieve(zone_lookup_url, local_zone_path)
+trips_pdf = pd.read_parquet(io.BytesIO(trip_bytes))
+zones_pdf = pd.read_csv(io.BytesIO(zone_bytes))
 
-dbfs_trip_path = f"dbfs:/FileStore/nyc_taxi/raw/yellow_tripdata_{year_month}.parquet"
-dbfs_zone_path = "dbfs:/FileStore/nyc_taxi/raw/taxi_zone_lookup.csv"
-
-dbutils.fs.cp(f"file:{local_trip_path}", dbfs_trip_path)
-dbutils.fs.cp(f"file:{local_zone_path}", dbfs_zone_path)
-
-print("Files staged on DBFS:")
-print(dbfs_trip_path)
-print(dbfs_zone_path)
+print(f"Downloaded {len(trips_pdf)} trip rows, {len(zones_pdf)} zone rows")
 
 # COMMAND ----------
 
@@ -65,8 +57,8 @@ print(dbfs_zone_path)
 
 # COMMAND ----------
 
-trips_df = spark.read.parquet(dbfs_trip_path)
-zones_df = spark.read.option("header", True).option("inferSchema", True).csv(dbfs_zone_path)
+trips_df = spark.createDataFrame(trips_pdf)
+zones_df = spark.createDataFrame(zones_pdf)
 
 (
     trips_df.write
