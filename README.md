@@ -59,7 +59,12 @@ Lakeview.
 
 ## Example insights
 
-Once built, the dashboard answers questions like: When does demand peak during
-the day? Which boroughs/zones generate the most trips and revenue? How does trip
-distance relate to fare and duration? How do payment method and tipping behavior
-vary across the rider base?
+Built from the January 2023 Yellow Taxi dataset (2.88M trips after cleaning):
+
+- **2.88M trips**, **$78.6M** total revenue, **$18.47** average fare, **20.4%** average tip
+- Demand climbs through the day and peaks in the early evening, dropping off overnight
+- Tuesday is the busiest day of the week; the weekly pattern is otherwise fairly even
+- A small number of Manhattan zones (e.g. Clinton East, JFK Airport) account for a
+  disproportionate share of the top 15 pickup zones by trip volume
+- Credit card is the dominant payment method over cash by a wide margin
+- Most trips fall in the 1–3 mile range, with volume dropping off sharply past 6 miles
