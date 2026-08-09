@@ -29,14 +29,17 @@ spark.sql(f"USE {database}")
 # MAGIC %md
 # MAGIC ## Download raw files to local disk, then stage on DBFS
 # MAGIC Databricks Spark can't read directly from an `https://` URL, so we pull the
-# MAGIC files to the driver's local filesystem first and copy them into DBFS.
+# MAGIC files to local disk first and copy them into DBFS. On serverless compute,
+# MAGIC local filesystem access is restricted to `/Workspace` paths (`/tmp` is not
+# MAGIC writable), so we stage under the current user's workspace directory.
 
 # COMMAND ----------
 
 import urllib.request
 import os
 
-local_dir = "/tmp/nyc_taxi_raw"
+current_user = spark.sql("SELECT current_user()").collect()[0][0]
+local_dir = f"/Workspace/Users/{current_user}/nyc_taxi_raw"
 os.makedirs(local_dir, exist_ok=True)
 
 local_trip_path = f"{local_dir}/yellow_tripdata_{year_month}.parquet"
