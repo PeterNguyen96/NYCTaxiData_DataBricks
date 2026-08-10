@@ -37,6 +37,7 @@ notebooks/
   01_bronze_ingest.py       downloads the month's data, lands bronze Delta tables
   02_silver_transform.py    cleans, filters, and enriches into silver_trips
   03_gold_aggregate.py      builds the six gold summary tables
+  04_data_quality_checks.py asserts row-count reconciliation, null/range checks
 dashboard/
   dashboard_queries.sql     one query per dashboard tile
   README.md                 step-by-step dashboard build instructions
@@ -49,7 +50,10 @@ dashboard/
 2. Run `notebooks/01_bronze_ingest.py`, then `02_silver_transform.py`, then
    `03_gold_aggregate.py`, in order. Each has a `year_month` / `database` widget
    at the top if you want to point at a different month or database name.
-3. Follow [`dashboard/README.md`](dashboard/README.md) to build the dashboard
+3. Run `notebooks/04_data_quality_checks.py` to validate the pipeline output —
+   it asserts row-count reconciliation between silver and each gold table,
+   null checks, and range checks, and raises if anything fails.
+4. Follow [`dashboard/README.md`](dashboard/README.md) to build the dashboard
    from the six gold tables.
 
 ## Tech stack
