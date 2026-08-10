@@ -23,6 +23,10 @@ flowchart LR
   day-of-week pattern, zone summary, payment mix, distance buckets) that the
   dashboard queries directly, keeping every dashboard query a simple `SELECT`.
 
+## Dashboard
+
+![NYC Taxi Overview dashboard](dashboard/screenshot.png)
+
 ## Data source
 
 [NYC TLC Trip Record Data](https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page) —
